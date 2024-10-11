@@ -1,5 +1,5 @@
-# MATHS7107, Tri2, 2024
-Data Taming
+# MATHS 7107, Tri2, 2024
+[Data Taming](https://www.adelaide.edu.au/course-outlines/111085/1/tri-2/)
 ## Module 1
 Introduction to R & data frames
 ## Module 2
