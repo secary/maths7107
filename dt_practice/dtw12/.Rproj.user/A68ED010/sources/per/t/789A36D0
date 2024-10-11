@@ -1,0 +1,28 @@
+{
+    "id": "789A36D0",
+    "path": null,
+    "project_path": null,
+    "type": "object_explorer",
+    "hash": "0",
+    "contents": "",
+    "dirty": false,
+    "created": 1723075355976.0,
+    "source_on_save": false,
+    "relative_order": 3,
+    "properties": {
+        "id": "b81802be9939460fa9c4b02c84cce374",
+        "name": "car_classtree",
+        "title": "car_classtree",
+        "language": "R",
+        "source_window_id": "",
+        "Source": "Source"
+    },
+    "folds": "",
+    "lastKnownWriteTime": 7595363790694654014,
+    "encoding": "",
+    "collab_server": "",
+    "source_window": "",
+    "last_content_update": 1723075355976,
+    "read_only": false,
+    "read_only_alternatives": []
+}

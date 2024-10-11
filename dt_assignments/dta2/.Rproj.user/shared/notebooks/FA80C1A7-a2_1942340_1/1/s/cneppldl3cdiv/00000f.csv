@@ -1,0 +1,3 @@
+"0","# calculate the xp days"
+"0","arch1 <- mutate(arch1,xp = dmy('15-06-2024') - dmy(Commenced))"
+"0","arch1 <- relocate(arch1,""xp"",.before = Commenced)"

@@ -1,0 +1,4 @@
+"0","# Delete the commenced date with too large numbers"
+"0","arch1 <- filter(arch1,xp < 45456)"
+"0","# Check the whole tibble for strange numbers again"
+"0","inspect_num(arch1)"

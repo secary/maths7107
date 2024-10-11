@@ -1,0 +1,6 @@
+"0","# extract targets numbers and arrows numbers"
+"0","arch1 <- mutate(arch1,targets = str_match(arch1$RES, 'hit (\\d+) times from (\\d+) shots')[,2])"
+"0","arch1 <- mutate(arch1,arrows = str_match(arch1$RES, 'hit (\\d+) times from (\\d+) shots')[,3])"
+"0","arch1 <- mutate(arch1,RES = NULL)"
+"0","arch1 <- relocate(arch1,""arrows"",.before = targets)"
+"0","head(arch1,10)"

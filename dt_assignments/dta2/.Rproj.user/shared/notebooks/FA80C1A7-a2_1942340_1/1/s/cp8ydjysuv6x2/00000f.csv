@@ -1,0 +1,3 @@
+"0","set.seed(1942340)"
+"0","arch_sample <- sample_n(arch1,450,replace = FALSE)"
+"0","head(arch_sample,10)"

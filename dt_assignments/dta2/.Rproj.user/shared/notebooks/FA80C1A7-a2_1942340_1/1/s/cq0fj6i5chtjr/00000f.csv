@@ -1,0 +1,6 @@
+"0","# plot the histograms of each variable"
+"0","# xp"
+"0","ggplot(arch_predict,aes(xp)) + "
+"0","  geom_histogram()"
+"1","[38;5;232m`stat_bin()` using `bins = 30`. Pick better value with `binwidth`.[39m
+"

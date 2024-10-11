@@ -1,0 +1,28 @@
+{
+    "id": "4B1E8741",
+    "path": null,
+    "project_path": null,
+    "type": "object_explorer",
+    "hash": "0",
+    "contents": "",
+    "dirty": false,
+    "created": 1726640263077.0,
+    "source_on_save": false,
+    "relative_order": 3,
+    "properties": {
+        "id": "b10dc2b5ae2a40d0aa1bef92a8537428",
+        "name": "lrfit2",
+        "title": "lrfit2",
+        "language": "R",
+        "source_window_id": "",
+        "Source": "Source"
+    },
+    "folds": "",
+    "lastKnownWriteTime": 2190347683585,
+    "encoding": "",
+    "collab_server": "",
+    "source_window": "",
+    "last_content_update": 1726640263077,
+    "read_only": false,
+    "read_only_alternatives": []
+}

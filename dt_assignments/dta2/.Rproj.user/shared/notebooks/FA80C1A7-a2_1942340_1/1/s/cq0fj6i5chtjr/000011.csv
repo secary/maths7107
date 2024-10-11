@@ -1,0 +1,10 @@
+"0","skewness(arch_predict$xp)"
+"1","[1]"
+"1"," 0.01820871"
+"1","
+"
+"0","#accuracy"
+"0","ggplot(arch_predict,aes(acc)) + "
+"0","  geom_histogram()"
+"1","[38;5;232m`stat_bin()` using `bins = 30`. Pick better value with `binwidth`.[39m
+"
