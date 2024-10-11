@@ -1,3 +1,0 @@
-"0","# Add row numbers and store the new tibble for comparison"
-"0","arch1 <- mutate(arch0,Archer = (1:555))"
-"0","arch1 <- rename(arch1,id = Archer)"
