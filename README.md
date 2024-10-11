@@ -1,5 +1,5 @@
 # MATHS7107, Tri2, 2024
-
+Data Taming
 ## Module 1
 Introduction to R & data frames
 ## Module 2
