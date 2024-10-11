@@ -1,0 +1,161 @@
+library(tidyverse)
+library(tidymodels)
+library(vip)
+library(ISLR)
+library(rpart.plot)
+library(modelr)
+library(ggp)
+
+# Q1. Loading the data
+# Your student number goes here
+ysn = 1942340
+# Calculate your student number modulo 3
+filenum <- (ysn + 2) %% 3
+filenum
+filename <- paste0("./data/merry_",filenum,".csv")
+filename
+# Read the csv file
+merry <- read_csv(filename)
+merry
+
+# Q3. Taming Data
+# Change the column names
+merry <- rename(merry,  rhbmm = RHBMM, acc = Accuracyyy, age = AGE, dress = DRESS,
+                home = Home, jail = Jail)
+# Transform into factors
+merry$rhbmm <- as.factor(merry$rhbmm)
+merry$age <- as.factor(merry$age)
+merry$dress <- as.factor(merry$dress)
+merry$home <- as.factor(merry$home)
+merry$jail <- ifelse(merry$jail == 'yes', TRUE, FALSE)
+merry$jail <- as.logical(merry$jail)
+merry
+
+# Q4. Set the training set and testing set
+set.seed(1942340)
+merry_split <- initial_split(merry, prop = 2/3)
+merry_train <- training(merry_split)
+merry_test <- testing(merry_split)
+merry_split
+merry_train
+merry_test
+
+# Q5. Build a logistic regression model
+classification_lr <- logistic_reg() %>%
+  set_engine('glm')
+
+lrfit <- classification_lr %>%
+  fit(rhbmm ~ acc+age+dress+home+jail, data = merry_train)
+summary(lrfit$fit)
+
+
+# Q6. Fit a matrix model
+model_matrix(merry_train, ~dress+age)
+
+
+# Q8
+lrfit0 <- classification_lr %>%
+  fit(rhbmm ~ acc+age+dress+home+jail+
+        acc:age+acc:dress+acc:home+acc:jail+
+        age:dress+age:home+age:jail+
+        dress:home+dress:jail+
+        home:jail,
+      data = merry_train
+      )
+Anova(lrfit0$fit)
+
+# Q9
+lrfit1 <- classification_lr %>%
+  fit(rhbmm ~ acc+age+dress+home+jail+
+        acc:age+acc:dress+acc:home+
+        age:dress+age:home+
+        dress:home,
+      data = merry_train
+  )
+Anova(lrfit1$fit)
+
+lrfit2 <- classification_lr %>%
+  fit(rhbmm ~ acc+age+dress+home+jail+
+        acc:age+acc:home+
+        dress:home,
+      data = merry_train
+  )
+Anova(lrfit2$fit)
+
+lrfit3 <- classification_lr %>%
+  fit(rhbmm ~ acc+dress+home+jail+
+        acc:age+acc:home+
+        dress:home,
+      data = merry_train
+  )
+Anova(lrfit3$fit)
+
+# Q15
+merry_test_preds <- bind_cols(
+  predict(lrfit3, new_data = merry_test),
+  truth = merry_test$rhbmm,
+  predict(lrfit3, new_data = merry_test, type = 'prob'),
+)
+merry_test_preds
+dim(merry_test_preds)
+
+# Q16
+# (a) prediction tibble
+merry_test_preds %>%
+  metrics(.pred_class,truth = truth)
+cm <- merry_test_preds %>%
+  conf_mat(
+    .pred_class,
+    truth = truth
+  )
+cm
+
+# accuracy
+merry_test_preds %>% accuracy(
+  .pred_class,
+  truth = truth
+)
+
+# sensitivity
+merry_test_preds %>% sens(
+  .pred_class,
+  truth = truth,
+  event_level = 'first'
+)
+
+# specificity
+merry_test_preds %>% spec(
+  .pred_class,
+  truth = truth,
+  event_level = 'first'
+)
+
+#(c) roc
+merry_test_preds %>%
+  roc_curve(
+    .pred_0,
+    truth = truth
+  ) %>%
+  autoplot()+
+  geom_vline(xintercept = 0.5) +
+  geom_hline(yintercept = 0.75)
+
+#(d) auc
+merry_test_preds %>%
+  roc_auc(
+    .pred_0,
+    truth = truth,
+    event_level = 'first'
+  )
+
+# Q17.
+target <- tibble(
+  acc=112/116,age='youth',dress='green',home='forest',jail=FALSE
+)
+target_preds <- bind_cols(
+  target,
+  predict(lrfit3,new_data = target),
+  predict(lrfit3,new_data = target, type = 'prob')
+  )
+
+target_preds
