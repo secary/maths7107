@@ -1,5 +1,7 @@
 # MATHS 7107, Tri2, 2024
 [Data Taming](https://www.adelaide.edu.au/course-outlines/111085/1/tri-2/)
+## Course outlines
+This course is a practical introduction to the practice of wrangling, finding relationships in, and making predictions from, messy datasets using statistical methods. The course introduces the principles of tidy data, types of data and data formats, exploratory data analysis, data transformation, as well as model fitting and prediction using statistical machine learning tools. A focus will be to introduce R programming for data science applications, particularly through real-world case studies.
 ## Module 1
 Introduction to R & data frames
 ## Module 2
