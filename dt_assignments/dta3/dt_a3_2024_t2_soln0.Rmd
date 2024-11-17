@@ -1,0 +1,374 @@
+---
+title: "Data Taming Assignment 3 --- SOLUTIONS_0"
+author: "Bill S. Preston Esq."
+date: "Trimester 1, 2024"
+output:
+  pdf_document: default
+---
+
+# Setup
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE, message=FALSE, warning = FALSE)
+```
+
+```{r }
+#Load the required packages
+library(tidyverse)
+library(tidymodels)
+library(modelr)
+library(car)
+```
+
+# Q1. Loading the data
+
+```{r}
+# Your student number goes here
+ysn<-1
+# Calculate your (student number + 2) modulo 3
+filenum <- (ysn+2) %% 3
+filenum
+filename<-paste0("./data/merry_",filenum,".csv")
+filename
+# Read in the data
+merry_raw <- read_csv(filename)
+# Display the first 10 lines of the data
+merry_raw
+```
+
+# Q2. Variable types
+
+* `RHBMM`: \textbf{Categorical nominal}. This is just the name assigned to  the status of being a Merry Man.
+* `Accuracy`: \textbf{Quantitative continuous}. This is a value between 0 and 1 (so not an integer), and since we don't know how many arrows each archer shot to judge their accuracy, it could in principle, be any number in this range. So it is quantitative continuous.
+* `AGE`: \textbf{Categorical ordinal}. This is the name of the category of age of the archer, and age is naturally ordered.
+* `DRESS`: \textbf{Categorical nominal}. This is just the name of the colour of the archer's clothing, and so it doesn't seem there would be any ordering.
+* `Home`: \textbf{Categorical nominal} This is just the name of the place where the archer live, and so it doesn't seem there would be any ordering.
+* `Jail`: \textbf{Categorical nominal}. This is the name assigned to the status of the archer having been in jail.
+
+# Q3. Taming the data
+
+```{r}
+## Convert column names to snakecase
+merry <- rename(merry_raw,
+                rhbmm=RHBMM,
+                accuracy=Accuracyyy,
+                age=AGE,
+                dress=DRESS,
+                home=Home,
+                jail=Jail)
+
+## Convert rhbmm to yes and no factors
+merry$rhbmm<-fct_recode(as.character(merry$rhbmm),"no"="0","yes"="1")
+
+## Convert age, dress, home to factors. Jail to logical
+merry$jail<-fct_recode(as.character(merry$jail),"FALSE"="no","TRUE"="yes")
+merry <- mutate(merry,
+                age=as.factor(age),
+                dress=as.factor(dress),
+                home=as.factor(home),
+                jail=as.logical(jail)
+                )
+merry
+```
+
+# Q4. Splitting data in training and testing sets
+
+```{r}
+set.seed(ysn)
+merry_split<-initial_split(merry, prop=2/3)
+merry_train<-training(merry_split)
+merry_test<-testing(merry_split)
+merry_train
+merry_test
+```
+
+# Q5. Logistic model with no interactions
+
+```{r}
+lr_spec = logistic_reg(mode="classification") %>% set_engine("glm")
+lr_spec
+fitindivs <- fit(lr_spec,rhbmm ~ ., data = merry_train)
+summary(fitindivs$fit)
+```
+
+# Q6. Effect on `DRESS` and `AGE` variables
+
+```{r}
+model_matrix(merry_train,~dress)
+model_matrix(merry_train,~age)
+```
+
+
+## Q6(a)
+
+* The `dress` variable has been split into 2 new binary variables: `dressgreen` and `dressred`.
+
+* The `age` variable has also been split into 2 new binary variables: `agesenior` and `ageyouth`.
+
+## Q6(b)
+
+* We see that the level `black` is missing from model matrix for `dress`, and so `black` is the reference level.
+
+* Similarly, see that `middle` is missing from the model matrix for `age` and so it must be the reference level.
+
+# Q7 Number of lines in model
+
+There are 3 levels in `age`, 3 levels in `dress`, 2 levels in `home` and 2 levels in `jail`. So we have $3\times 3\times 2\times 2 = 36$ number of lines.
+
+# Q8 Interacting model
+
+```{r}
+fitall<-fit(lr_spec,rhbmm ~ (.)^2, data = merry_train)
+Anova(fitall$fit)
+```
+
+The interaction terms significant at the 99% significance level are:
+
+* `accuracy:home`
+* `dress:home`
+
+# Q9 Backwards stepwise regression
+
+## Q9(a)
+
+```{r}
+m1<-fit(lr_spec,rhbmm ~ (.)^2-age:jail-home:jail-dress:jail-accuracy:jail, data = merry_train)
+Anova(m1$fit)
+```
+
+## Q9(b)
+
+THESE SIGNIFICANCE LEVELS ARE PROBABLY WRONG IN EACH STUDENT'S VERSION
+
+* `accuracy:dress` is least significant
+
+```{r}
+m2<-fit(lr_spec,rhbmm ~ (.)^2-age:jail-home:jail-dress:jail-accuracy:jail-accuracy:dress, data = merry_train)
+Anova(m2$fit)
+```
+
+* `accuracy:age` is least significant
+
+```{r}
+m3<-fit(lr_spec,rhbmm ~ (.)^2-age:jail-home:jail-dress:jail-accuracy:jail-accuracy:dress-accuracy:age, data = merry_train)
+Anova(m3$fit)
+```
+
+* `age:dress` is least significant (interaction) term
+
+```{r}
+m4<-fit(lr_spec,rhbmm ~ (.)^2-age:jail-home:jail-dress:jail-accuracy:jail-accuracy:dress-accuracy:age-age:dress, data = merry_train)
+Anova(m4$fit)
+```
+
+* `age:home` is least significant (interaction) term
+
+```{r}
+m5<-fit(lr_spec,rhbmm ~ (.)^2-age:jail-home:jail-dress:jail-accuracy:jail-accuracy:dress-accuracy:age-age:dress-age:home, data = merry_train)
+Anova(m5$fit)
+```
+
+## Q9(c)
+
+* `age` is least significant
+```{r}
+m6<-fit(lr_spec,rhbmm ~ (.)^2-age:jail-home:jail-dress:jail-accuracy:jail-accuracy:dress-accuracy:age-age:dress-age:home-age, data = merry_train)
+Anova(m6$fit)
+```
+
+# Q10
+
+## Q10(a)
+
+`accuracy:home` and `dress:home` are significant at the 95% significance level
+
+## Q10(b)
+
+* If you live in the forest, you might be more likely to hunt for food, so you would be better at archery.
+
+* Also, if you live in the forest, you might be less likely to wear red, so that you are camouflaged.
+
+# Q11 General form of our estimated log-odds function
+
+$$\hat{r}_i = \hat{\beta}_0 + \hat{\beta}_1 a_{i} + \hat{\beta}_2 d^{(g)}_{i} + \hat{\beta}_3 d^{(r)}_{i} + \hat{\beta}_4 h_{i} + \hat{\beta}_5 j_{i}+ \hat{\beta}_6 \; (a_{i}\times h_{i}) +\hat{\beta}_7 \;(d^{(g)}_{i}\times h_{i}) + \hat{\beta}_8 \;(d^{(r)}_{i}\times h_{i})$$
+where
+
+* $a$ is the `acc` variable, which is a real number between 0 and 1.
+
+* $d^{(g)}$ is the `dressgreen` class, a binary integer equal to 
+  - "1" for green clothes
+  - "0" for non-green clothes
+
+* $d^{(r)}$ the `dressred` class, a binary integer equal to 
+  - "1" for red clothes
+  - "0" for non-red clothes
+
+* $h$ the `home` class, a binary integer equal to
+  - "0" for a city home
+  - "1" for a forest home
+
+* $j$ the `jail`, a binary integer equal to
+  - "1" for having been to jail
+  - "0" for never having been to jail
+
+# Q12
+
+## Q12(a)
+
+* There are $3\times (2^2)=12$ lines. The variables `home` and `jail` each have two options, and `dress` has 3 options. (We saw that the `dress` variable was split into 2 new binary variables, `dressred` and `dressgreen`, but they can't both be $1$ at the same time.)
+
+## Q12(b)
+
+* No, we have an interaction term $a \times h$, and so the coefficient of `accuracy` (the gradient) will change for the two values of `home`, $0$ or $1$.
+
+# Q13
+
+```{r}
+summary(m6$fit)
+m6$fit$coefficients
+m6coeffs<-as.numeric(m6$fit$coefficients)
+beta0=m6coeffs[1]
+beta1=m6coeffs[2]
+beta2=m6coeffs[3]
+beta3=m6coeffs[4]
+beta4=m6coeffs[5]
+beta5=m6coeffs[6]
+beta6=m6coeffs[7]
+beta7=m6coeffs[8]
+beta8=m6coeffs[9]
+```
+
+This output gives us the equation
+\begin{align*}
+\hat{r}_i &= `r round(beta0,2)` +`r round(beta1,2)` a_{i} + `r round(beta2,2)` d^{(g)}_{i} `r round(beta3,3)` d^{(r)}_{i} +`r round(beta4,2)` h_{i} + `r round(beta5,3)` j_{i}+ `r round(beta6,2)` \; (a_{i}\times h_{i}) +`r round(beta7,2)` \;(d^{(g)}_{i}\times h_{i}) `r round(beta8,2)` \;(d^{(r)}_{i}\times h_{i})
+\end{align*}
+
+# Q14
+
+## Q14(a)
+
+```{r}
+dg<-0
+dr<-1
+h<-1
+j<-1
+int1<- beta0+beta2*dg+beta3*dr+beta4*h+beta5*j+beta7*dg*h+beta8*dr*h
+int1
+
+slope1<-beta1+beta6*h
+slope1
+```
+
+This gives us an estimated line:
+$$\log\left(\frac{\hat{\pi}_i}{1-\hat{\pi}_i}\right) = `r round(int1,2)`+ `r signif(slope1,3)`\; a_i$$
+
+## Q14(b)
+
+```{r}
+dg<-0
+dr<-0
+h<-0
+j<-0
+int2<- beta0+beta2*dg+beta3*dr+beta4*h+beta5*j+beta7*dg*h+beta8*dr*h
+int2
+
+slope2<-beta1+beta6*h
+slope2
+```
+
+This gives us an estimated line:
+$$\log\left(\frac{\hat{\pi}_i}{1-\hat{\pi}_i}\right) = `r round(int2,2)`+ `r signif(slope2,3)`\; a_i$$
+
+# Q15
+
+```{r}
+merry_pred = 
+  bind_cols(merry_test[,"rhbmm"],
+            predict(m6, merry_test, type = "class"),
+            predict(m6, merry_test, type = "prob")
+  )
+merry_pred
+```
+
+# Q16
+
+## Q16(a)
+
+```{r}
+cm1 <- merry_pred %>%
+  conf_mat(
+    .pred_class,
+    truth = rhbmm
+  )
+cm1
+
+merry_pred %>% accuracy(
+  .pred_class,
+  truth = rhbmm
+)
+```
+
+
+## Q16(b)
+
+```{r}
+sens1 <- tidy(cm1)[4,2] / (tidy(cm1)[4,2] + tidy(cm1)[3,2])
+sens1
+merry_pred %>% sens(
+  .pred_class,
+  truth = rhbmm,
+  event_level="second"
+)
+
+spec1 <- tidy(cm1)[1,2] / (tidy(cm1)[1,2] + tidy(cm1)[2,2])
+spec1
+merry_pred %>% spec(
+  .pred_class,
+  truth = rhbmm,
+  event_level="second"
+)
+```
+
+## Q16(c)
+
+```{r}
+merry_pred %>%
+  roc_curve(
+    .pred_yes,
+    truth = rhbmm,
+    event_level = "second"
+  ) %>%
+  autoplot()+
+  geom_vline(xintercept=as.numeric(1-spec1))+
+  geom_hline(yintercept=as.numeric(sens1))
+```
+
+## Q16(d)
+
+```{r}
+merry_pred %>%
+  roc_auc(
+    .pred_yes,
+    truth = rhbmm,
+    event_level = "second"
+  )
+```
+
+# Q17
+
+```{r}
+new_archer <- tibble(
+  accuracy=112/116,
+  age="youth",
+  jail=as.logical("FALSE"),
+  home="forest",
+  dress="green"
+)
+new_archer
+
+pprob<-predict(m6, new_archer, type="prob")
+pprob
+predict(m6, new_archer, type="class")
+```
+
+We predict that the new archer is Merry Man, with probability `r round(100*pprob$.pred_yes,1)`\%.
